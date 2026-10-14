@@ -41,6 +41,9 @@ P.setText = function (t: string) {
 P.setCssStyles = function (styles: Record<string, string>) {
 	Object.assign(this.style, styles);
 };
+P.instanceOf = function (ctor: Function) {
+	return this instanceof ctor;
+};
 
 export class Notice {
 	constructor(msg: string) {

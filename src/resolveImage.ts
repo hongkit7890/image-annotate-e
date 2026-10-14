@@ -23,9 +23,18 @@ function isExternal(src: string): boolean {
 	return /^(https?:|data:|blob:|file:)/i.test(src.trim());
 }
 
+function asImageFile(file: unknown): TFile | null {
+	return file instanceof TFile && isImageFile(file) ? file : null;
+}
+
 /** Resolve a vault image file from a right-clicked <img> / embed element. */
 export function resolveImageFromElement(app: App, el: HTMLElement): TFile | null {
-	const img = el instanceof HTMLImageElement ? el : el.closest("img");
+	const closestImg = el.closest("img");
+	const img = el.instanceOf(HTMLImageElement)
+		? el
+		: closestImg && closestImg.instanceOf(HTMLImageElement)
+			? closestImg
+			: null;
 	if (!img) {
 		// Might have right-clicked the embed wrapper
 		const embedOnly =
@@ -90,23 +99,25 @@ function resolveLinkpath(app: App, linkpath: string): TFile | null {
 	if (!cleaned || isExternal(cleaned)) return null;
 
 	const sourcePath = app.workspace.getActiveFile()?.path ?? "";
-	const dest = app.metadataCache.getFirstLinkpathDest(cleaned, sourcePath);
-	if (dest instanceof TFile && isImageFile(dest)) return dest;
+	const dest = asImageFile(app.metadataCache.getFirstLinkpathDest(cleaned, sourcePath));
+	if (dest) return dest;
 
-	// Exact vault path
-	const byPath = app.vault.getAbstractFileByPath(cleaned);
-	if (byPath instanceof TFile && isImageFile(byPath)) return byPath;
+	const byPath = asImageFile(app.vault.getAbstractFileByPath(cleaned));
+	if (byPath) return byPath;
 
-	// Basename fallback
 	const base = cleaned.split("/").pop() ?? "";
 	if (!base) return null;
+
 	const activeFolder = app.workspace.getActiveFile()?.parent?.path ?? "";
-	const files = app.vault.getFiles().filter(isImageFile);
-	return (
-		files.find((f) => f.name === base && f.parent?.path === activeFolder) ||
-		files.find((f) => f.name === base) ||
-		null
-	);
+	if (activeFolder) {
+		const inFolder = asImageFile(app.vault.getAbstractFileByPath(`${activeFolder}/${base}`));
+		if (inFolder) return inFolder;
+	}
+
+	const byBase = asImageFile(app.vault.getAbstractFileByPath(base));
+	if (byBase) return byBase;
+
+	return asImageFile(app.metadataCache.getFirstLinkpathDest(base, sourcePath));
 }
 
 function resolveFromSrcUrl(app: App, src: string): TFile | null {
@@ -114,31 +125,17 @@ function resolveFromSrcUrl(app: App, src: string): TFile | null {
 
 	try {
 		const url = new URL(src);
-		let path = cleanLinkpath(url.pathname);
+		const path = cleanLinkpath(url.pathname);
+		const parts = path.split("/").filter(Boolean);
 
-		// Match longest vault file path suffix
-		const files = app.vault.getFiles().filter(isImageFile);
-		let best: TFile | null = null;
-		for (const file of files) {
-			if (
-				path === file.path ||
-				path.endsWith("/" + file.path) ||
-				path.endsWith(file.path)
-			) {
-				if (!best || file.path.length > best.path.length) best = file;
-			}
+		for (let i = 0; i < parts.length; i++) {
+			const candidate = parts.slice(i).join("/");
+			const file = asImageFile(app.vault.getAbstractFileByPath(candidate));
+			if (file) return file;
 		}
-		if (best) return best;
 
-		const basename = path.split("/").pop() ?? "";
-		if (basename) {
-			const activeFolder = app.workspace.getActiveFile()?.parent?.path ?? "";
-			return (
-				files.find((f) => f.name === basename && f.parent?.path === activeFolder) ||
-				files.find((f) => f.name === basename) ||
-				null
-			);
-		}
+		const basename = parts[parts.length - 1] ?? "";
+		if (basename) return resolveLinkpath(app, basename);
 	} catch {
 		/* ignore */
 	}

@@ -334,8 +334,12 @@ function cleanLinkpath(raw) {
 function isExternal(src) {
   return /^(https?:|data:|blob:|file:)/i.test(src.trim());
 }
+function asImageFile(file) {
+  return file instanceof import_obsidian.TFile && isImageFile(file) ? file : null;
+}
 function resolveImageFromElement(app, el) {
-  const img = el instanceof HTMLImageElement ? el : el.closest("img");
+  const closestImg = el.closest("img");
+  const img = el.instanceOf(HTMLImageElement) ? el : closestImg && closestImg.instanceOf(HTMLImageElement) ? closestImg : null;
   if (!img) {
     const embedOnly = el.closest(".internal-embed") || el.closest(".image-embed") || el.closest(".media-embed");
     if (embedOnly) {
@@ -380,34 +384,34 @@ function resolveLinkpath(app, linkpath) {
   const cleaned = cleanLinkpath(linkpath);
   if (!cleaned || isExternal(cleaned)) return null;
   const sourcePath = app.workspace.getActiveFile()?.path ?? "";
-  const dest = app.metadataCache.getFirstLinkpathDest(cleaned, sourcePath);
-  if (dest instanceof import_obsidian.TFile && isImageFile(dest)) return dest;
-  const byPath = app.vault.getAbstractFileByPath(cleaned);
-  if (byPath instanceof import_obsidian.TFile && isImageFile(byPath)) return byPath;
+  const dest = asImageFile(app.metadataCache.getFirstLinkpathDest(cleaned, sourcePath));
+  if (dest) return dest;
+  const byPath = asImageFile(app.vault.getAbstractFileByPath(cleaned));
+  if (byPath) return byPath;
   const base = cleaned.split("/").pop() ?? "";
   if (!base) return null;
   const activeFolder = app.workspace.getActiveFile()?.parent?.path ?? "";
-  const files = app.vault.getFiles().filter(isImageFile);
-  return files.find((f) => f.name === base && f.parent?.path === activeFolder) || files.find((f) => f.name === base) || null;
+  if (activeFolder) {
+    const inFolder = asImageFile(app.vault.getAbstractFileByPath(`${activeFolder}/${base}`));
+    if (inFolder) return inFolder;
+  }
+  const byBase = asImageFile(app.vault.getAbstractFileByPath(base));
+  if (byBase) return byBase;
+  return asImageFile(app.metadataCache.getFirstLinkpathDest(base, sourcePath));
 }
 function resolveFromSrcUrl(app, src) {
   if (!src) return null;
   try {
     const url = new URL(src);
-    let path = cleanLinkpath(url.pathname);
-    const files = app.vault.getFiles().filter(isImageFile);
-    let best = null;
-    for (const file of files) {
-      if (path === file.path || path.endsWith("/" + file.path) || path.endsWith(file.path)) {
-        if (!best || file.path.length > best.path.length) best = file;
-      }
+    const path = cleanLinkpath(url.pathname);
+    const parts = path.split("/").filter(Boolean);
+    for (let i = 0; i < parts.length; i++) {
+      const candidate = parts.slice(i).join("/");
+      const file = asImageFile(app.vault.getAbstractFileByPath(candidate));
+      if (file) return file;
     }
-    if (best) return best;
-    const basename = path.split("/").pop() ?? "";
-    if (basename) {
-      const activeFolder = app.workspace.getActiveFile()?.parent?.path ?? "";
-      return files.find((f) => f.name === basename && f.parent?.path === activeFolder) || files.find((f) => f.name === basename) || null;
-    }
+    const basename = parts[parts.length - 1] ?? "";
+    if (basename) return resolveLinkpath(app, basename);
   } catch {
   }
   return null;
@@ -647,7 +651,7 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     }
     this.stage.toggleClass("is-select", tool === "select");
     this.stage.toggleClass("is-text", tool === "text");
-    this.canvas.style.cursor = "";
+    this.canvas.setCssStyles({ cursor: "default" });
     this.syncColorUI();
   }
   /** Highlight keeps its own color so the other tools' color is not affected. */
@@ -723,9 +727,9 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     this.objects = [];
     this.undoStack = [];
     this.redoStack = [];
-    requestAnimationFrame(() => {
+    window.requestAnimationFrame(() => {
       this.fitStage();
-      requestAnimationFrame(() => this.fitStage());
+      window.requestAnimationFrame(() => this.fitStage());
     });
   }
   fitStage() {
@@ -736,8 +740,10 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     const scale = Math.min(1, maxW / this.canvas.width, maxH / this.canvas.height);
     const displayW = Math.max(1, Math.floor(this.canvas.width * scale));
     const displayH = Math.max(1, Math.floor(this.canvas.height * scale));
-    this.canvas.style.width = `${displayW}px`;
-    this.canvas.style.height = `${displayH}px`;
+    this.canvas.setCssStyles({
+      width: `${displayW}px`,
+      height: `${displayH}px`
+    });
   }
   /** Canvas pixels per on-screen pixel, so sizes look the same at any image resolution. */
   screenScale() {
@@ -912,7 +918,9 @@ var AnnotateModal = class extends import_obsidian2.Modal {
   onPointerMove(e) {
     const p = this.canvasPoint(e);
     if (this.tool === "select" && !this.drawing) {
-      this.canvas.style.cursor = this.hitObject(p) ? "move" : "default";
+      this.canvas.setCssStyles({
+        cursor: this.hitObject(p) ? "move" : "default"
+      });
       return;
     }
     if (!this.drawing || !this.start) return;
@@ -1023,12 +1031,14 @@ var AnnotateModal = class extends import_obsidian2.Modal {
   beginTextAt(p, e) {
     this.finishText(true);
     const s = this.screenScale();
-    const input = document.createElement("input");
-    input.type = "text";
-    input.className = "iae-text-input";
-    input.style.left = `${p.x / s}px`;
-    input.style.top = `${p.y / s}px`;
-    this.stage.appendChild(input);
+    const input = this.stage.createEl("input", {
+      cls: "iae-text-input",
+      attr: { type: "text" }
+    });
+    input.setCssStyles({
+      left: `${p.x / s}px`,
+      top: `${p.y / s}px`
+    });
     this.textEdit = { input, p };
     this.styleTextInput();
     input.focus();
@@ -1052,11 +1062,8 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     const input = this.textEdit?.input;
     if (!input) return;
     const fs = textFontSize({ thickness: this.thickness, s: 1 });
-    input.style.fontSize = `${fs}px`;
-    input.style.color = this.color;
-    input.style.caretColor = this.color;
     const o = Math.max(1, Math.round(fs * 0.08));
-    input.style.textShadow = this.borderOn ? [
+    const textShadow = this.borderOn ? [
       [o, 0],
       [-o, 0],
       [0, o],
@@ -1070,7 +1077,13 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     this.ctx.font = `bold ${fs}px sans-serif`;
     const width = this.ctx.measureText(input.value).width;
     this.ctx.restore();
-    input.style.width = `${Math.ceil(width) + o * 2 + 4}px`;
+    input.setCssStyles({
+      fontSize: `${fs}px`,
+      color: this.color,
+      caretColor: this.color,
+      textShadow,
+      width: `${Math.ceil(width) + o * 2 + 4}px`
+    });
   }
   /** Adds the pending text (if `commit`) and removes the input. Safe to call repeatedly. */
   finishText(commit) {
@@ -1090,10 +1103,12 @@ var AnnotateModal = class extends import_obsidian2.Modal {
     if (!this.cropOverlay) {
       this.cropOverlay = this.stage.createDiv({ cls: "iae-crop-overlay" });
     }
-    this.cropOverlay.style.left = `${r.x * scaleX}px`;
-    this.cropOverlay.style.top = `${r.y * scaleY}px`;
-    this.cropOverlay.style.width = `${r.w * scaleX}px`;
-    this.cropOverlay.style.height = `${r.h * scaleY}px`;
+    this.cropOverlay.setCssStyles({
+      left: `${r.x * scaleX}px`,
+      top: `${r.y * scaleY}px`,
+      width: `${r.w * scaleX}px`,
+      height: `${r.h * scaleY}px`
+    });
   }
   clearCropOverlay() {
     if (this.cropOverlay) {
@@ -1344,8 +1359,8 @@ var ImageAnnotatEPlugin = class extends import_obsidian3.Plugin {
     );
     this.registerDomEvent(document, "contextmenu", (evt) => {
       const target = evt.target;
-      if (!target) return;
-      const img = target instanceof HTMLImageElement ? target : target.closest("img");
+      if (!(target instanceof HTMLElement)) return;
+      const img = target.instanceOf(HTMLImageElement) ? target : target.closest("img");
       if (!img) return;
       if (img.closest(".iae-modal, .workspace-ribbon, .titlebar")) return;
       const inNote = img.closest(".markdown-preview-view") || img.closest(".markdown-source-view") || img.closest(".cm-editor") || img.closest(".image-embed") || img.closest(".internal-embed") || img.closest(".view-content");
@@ -1359,11 +1374,11 @@ var ImageAnnotatEPlugin = class extends import_obsidian3.Plugin {
       id: "annotate-active-image",
       name: "Annotate image under cursor / selection",
       callback: () => {
-        const img = document.querySelector(
+        const el = document.querySelector(
           ".markdown-preview-view img:hover, .image-embed:hover img, .cm-editor img:hover"
         );
-        if (img) {
-          const file = resolveImageFromElement(this.app, img);
+        if (el instanceof HTMLElement && el.instanceOf(HTMLImageElement)) {
+          const file = resolveImageFromElement(this.app, el);
           if (file) {
             this.openAnnotator(file);
             return;
@@ -1397,29 +1412,20 @@ var ImageAnnotatEPlugin = class extends import_obsidian3.Plugin {
     if (!pending || Date.now() - pending.time > 800) return;
     const menus = Array.from(document.querySelectorAll(".menu"));
     const menuEl = menus[menus.length - 1];
-    if (!menuEl) return;
+    if (!(menuEl instanceof HTMLElement)) return;
     const already = Array.from(menuEl.querySelectorAll(".menu-item-title")).some(
       (el) => el.textContent?.trim() === "Annotate"
     );
     if (already || menuEl.querySelector(".iae-menu-item")) return;
-    const sep = document.createElement("div");
-    sep.className = "menu-separator";
-    const item = document.createElement("div");
-    item.className = "menu-item iae-menu-item";
-    const icon = document.createElement("div");
-    icon.className = "menu-item-icon";
+    menuEl.createDiv({ cls: "menu-separator" });
+    const item = menuEl.createDiv({ cls: "menu-item iae-menu-item" });
+    const icon = item.createDiv({ cls: "menu-item-icon" });
     (0, import_obsidian3.setIcon)(icon, "pencil");
-    const title = document.createElement("div");
-    title.className = "menu-item-title";
-    title.textContent = "Annotate";
-    item.appendChild(icon);
-    item.appendChild(title);
+    item.createDiv({ cls: "menu-item-title", text: "Annotate" });
     item.addEventListener("click", () => {
       document.body.click();
       this.openAnnotator(pending.file);
     });
-    menuEl.appendChild(sep);
-    menuEl.appendChild(item);
   }
   openAnnotator(file) {
     new AnnotateModal(this.app, file).open();

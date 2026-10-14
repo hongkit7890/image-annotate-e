@@ -3,3 +3,6 @@ test/out/
 .DS_Store
 *.log
 data.json
+
+debug/
+sample.png

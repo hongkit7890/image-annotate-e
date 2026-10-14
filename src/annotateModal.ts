@@ -306,7 +306,7 @@ export class AnnotateModal extends Modal {
 		}
 		this.stage.toggleClass("is-select", tool === "select");
 		this.stage.toggleClass("is-text", tool === "text");
-		this.canvas.style.cursor = "";
+		this.canvas.setCssStyles({ cursor: "default" });
 		this.syncColorUI();
 	}
 
@@ -403,9 +403,9 @@ export class AnnotateModal extends Modal {
 		this.undoStack = [];
 		this.redoStack = [];
 		// Layout may not be ready on first tick
-		requestAnimationFrame(() => {
+		window.requestAnimationFrame(() => {
 			this.fitStage();
-			requestAnimationFrame(() => this.fitStage());
+			window.requestAnimationFrame(() => this.fitStage());
 		});
 	}
 
@@ -418,8 +418,10 @@ export class AnnotateModal extends Modal {
 		const scale = Math.min(1, maxW / this.canvas.width, maxH / this.canvas.height);
 		const displayW = Math.max(1, Math.floor(this.canvas.width * scale));
 		const displayH = Math.max(1, Math.floor(this.canvas.height * scale));
-		this.canvas.style.width = `${displayW}px`;
-		this.canvas.style.height = `${displayH}px`;
+		this.canvas.setCssStyles({
+			width: `${displayW}px`,
+			height: `${displayH}px`,
+		});
 	}
 
 	/** Canvas pixels per on-screen pixel, so sizes look the same at any image resolution. */
@@ -613,7 +615,9 @@ export class AnnotateModal extends Modal {
 		const p = this.canvasPoint(e);
 
 		if (this.tool === "select" && !this.drawing) {
-			this.canvas.style.cursor = this.hitObject(p) ? "move" : "default";
+			this.canvas.setCssStyles({
+				cursor: this.hitObject(p) ? "move" : "default",
+			});
 			return;
 		}
 		if (!this.drawing || !this.start) return;
@@ -739,12 +743,14 @@ export class AnnotateModal extends Modal {
 		this.finishText(true);
 		const s = this.screenScale();
 
-		const input = document.createElement("input");
-		input.type = "text";
-		input.className = "iae-text-input";
-		input.style.left = `${p.x / s}px`;
-		input.style.top = `${p.y / s}px`;
-		this.stage.appendChild(input);
+		const input = this.stage.createEl("input", {
+			cls: "iae-text-input",
+			attr: { type: "text" },
+		});
+		input.setCssStyles({
+			left: `${p.x / s}px`,
+			top: `${p.y / s}px`,
+		});
 		this.textEdit = { input, p };
 		this.styleTextInput();
 		input.focus();
@@ -770,11 +776,8 @@ export class AnnotateModal extends Modal {
 		const input = this.textEdit?.input;
 		if (!input) return;
 		const fs = textFontSize({ thickness: this.thickness, s: 1 });
-		input.style.fontSize = `${fs}px`;
-		input.style.color = this.color;
-		input.style.caretColor = this.color;
 		const o = Math.max(1, Math.round(fs * 0.08));
-		input.style.textShadow = this.borderOn
+		const textShadow = this.borderOn
 			? [
 					[o, 0], [-o, 0], [0, o], [0, -o],
 					[o, o], [-o, -o], [o, -o], [-o, o],
@@ -786,7 +789,13 @@ export class AnnotateModal extends Modal {
 		this.ctx.font = `bold ${fs}px sans-serif`;
 		const width = this.ctx.measureText(input.value).width;
 		this.ctx.restore();
-		input.style.width = `${Math.ceil(width) + o * 2 + 4}px`;
+		input.setCssStyles({
+			fontSize: `${fs}px`,
+			color: this.color,
+			caretColor: this.color,
+			textShadow,
+			width: `${Math.ceil(width) + o * 2 + 4}px`,
+		});
 	}
 
 	/** Adds the pending text (if `commit`) and removes the input. Safe to call repeatedly. */
@@ -808,10 +817,12 @@ export class AnnotateModal extends Modal {
 		if (!this.cropOverlay) {
 			this.cropOverlay = this.stage.createDiv({ cls: "iae-crop-overlay" });
 		}
-		this.cropOverlay.style.left = `${r.x * scaleX}px`;
-		this.cropOverlay.style.top = `${r.y * scaleY}px`;
-		this.cropOverlay.style.width = `${r.w * scaleX}px`;
-		this.cropOverlay.style.height = `${r.h * scaleY}px`;
+		this.cropOverlay.setCssStyles({
+			left: `${r.x * scaleX}px`,
+			top: `${r.y * scaleY}px`,
+			width: `${r.w * scaleX}px`,
+			height: `${r.h * scaleY}px`,
+		});
 	}
 
 	private clearCropOverlay(): void {

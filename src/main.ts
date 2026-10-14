@@ -48,13 +48,12 @@ export default class ImageAnnotatEPlugin extends Plugin {
 
 		// Bubble: after Obsidian opens its menu, inject Annotate into it
 		this.registerDomEvent(document, "contextmenu", (evt: MouseEvent) => {
-			const target = evt.target as HTMLElement | null;
-			if (!target) return;
+			const target = evt.target;
+			if (!(target instanceof HTMLElement)) return;
 
-			const img =
-				target instanceof HTMLImageElement
-					? target
-					: (target.closest("img") as HTMLImageElement | null);
+			const img = target.instanceOf(HTMLImageElement)
+				? target
+				: target.closest("img");
 			if (!img) return;
 			if (img.closest(".iae-modal, .workspace-ribbon, .titlebar")) return;
 
@@ -78,11 +77,11 @@ export default class ImageAnnotatEPlugin extends Plugin {
 			id: "annotate-active-image",
 			name: "Annotate image under cursor / selection",
 			callback: () => {
-				const img = document.querySelector(
+				const el = document.querySelector(
 					".markdown-preview-view img:hover, .image-embed:hover img, .cm-editor img:hover"
-				) as HTMLImageElement | null;
-				if (img) {
-					const file = resolveImageFromElement(this.app, img);
+				);
+				if (el instanceof HTMLElement && el.instanceOf(HTMLImageElement)) {
+					const file = resolveImageFromElement(this.app, el);
 					if (file) {
 						this.openAnnotator(file);
 						return;
@@ -122,37 +121,25 @@ export default class ImageAnnotatEPlugin extends Plugin {
 		if (!pending || Date.now() - pending.time > 800) return;
 
 		const menus = Array.from(document.querySelectorAll(".menu"));
-		const menuEl = menus[menus.length - 1] as HTMLElement | undefined;
-		if (!menuEl) return;
+		const menuEl = menus[menus.length - 1];
+		if (!(menuEl instanceof HTMLElement)) return;
 
 		const already = Array.from(menuEl.querySelectorAll(".menu-item-title")).some(
 			(el) => el.textContent?.trim() === "Annotate"
 		);
 		if (already || menuEl.querySelector(".iae-menu-item")) return;
 
-		const sep = document.createElement("div");
-		sep.className = "menu-separator";
+		menuEl.createDiv({ cls: "menu-separator" });
 
-		const item = document.createElement("div");
-		item.className = "menu-item iae-menu-item";
-
-		const icon = document.createElement("div");
-		icon.className = "menu-item-icon";
+		const item = menuEl.createDiv({ cls: "menu-item iae-menu-item" });
+		const icon = item.createDiv({ cls: "menu-item-icon" });
 		setIcon(icon, "pencil");
+		item.createDiv({ cls: "menu-item-title", text: "Annotate" });
 
-		const title = document.createElement("div");
-		title.className = "menu-item-title";
-		title.textContent = "Annotate";
-
-		item.appendChild(icon);
-		item.appendChild(title);
 		item.addEventListener("click", () => {
 			document.body.click();
 			this.openAnnotator(pending.file);
 		});
-
-		menuEl.appendChild(sep);
-		menuEl.appendChild(item);
 	}
 
 	openAnnotator(file: TFile): void {
