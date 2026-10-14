@@ -1295,12 +1295,14 @@ function arrayBufferToBase64(bytes) {
   return btoa(binary);
 }
 function appendSvg(parent, svgMarkup) {
-  const doc = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
+  const markup = svgMarkup.includes("xmlns=") ? svgMarkup : svgMarkup.replace("<svg", `<svg xmlns="${SVG_NS}"`);
+  const doc = new DOMParser().parseFromString(markup, "image/svg+xml");
   const svg = doc.documentElement;
-  if (svg.nodeName.toLowerCase() === "svg") {
+  if (svg.namespaceURI === SVG_NS && svg.localName === "svg") {
     parent.appendChild(parent.ownerDocument.importNode(svg, true));
   }
 }
+var SVG_NS = "http://www.w3.org/2000/svg";
 function makeToolButton(parent, label, icon, title) {
   const btn = parent.createEl("button", {
     cls: "iae-tool",

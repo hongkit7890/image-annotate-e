@@ -1029,12 +1029,18 @@ function arrayBufferToBase64(bytes: Uint8Array): string {
 
 /** Append an SVG markup string without using innerHTML (review guideline). */
 function appendSvg(parent: HTMLElement, svgMarkup: string): void {
-	const doc = new DOMParser().parseFromString(svgMarkup, "image/svg+xml");
+	// Without xmlns the XML parser yields non-SVG elements that render nothing.
+	const markup = svgMarkup.includes("xmlns=")
+		? svgMarkup
+		: svgMarkup.replace("<svg", `<svg xmlns="${SVG_NS}"`);
+	const doc = new DOMParser().parseFromString(markup, "image/svg+xml");
 	const svg = doc.documentElement;
-	if (svg.nodeName.toLowerCase() === "svg") {
+	if (svg.namespaceURI === SVG_NS && svg.localName === "svg") {
 		parent.appendChild(parent.ownerDocument.importNode(svg, true));
 	}
 }
+
+const SVG_NS = "http://www.w3.org/2000/svg";
 
 function makeToolButton(
 	parent: HTMLElement,
