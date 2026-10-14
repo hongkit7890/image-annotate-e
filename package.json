@@ -1,0 +1,27 @@
+{
+	"name": "image-annotate-e",
+	"version": "1.0.0",
+	"description": "Obsidian image annotation plugin with Evernote-style tools",
+	"main": "main.js",
+	"scripts": {
+		"dev": "node esbuild.config.mjs",
+		"build": "node esbuild.config.mjs production",
+		"test:harness": "node test/run-harness.mjs"
+	},
+	"keywords": [
+		"obsidian",
+		"plugin",
+		"image",
+		"annotation"
+	],
+	"license": "MIT",
+	"devDependencies": {
+		"@types/node": "^20.11.0",
+		"builtin-modules": "^3.3.0",
+		"esbuild": "^0.25.0",
+		"obsidian": "^1.7.2",
+		"puppeteer-core": "^25.13.0",
+		"tslib": "^2.8.0",
+		"typescript": "^5.7.2"
+	}
+}

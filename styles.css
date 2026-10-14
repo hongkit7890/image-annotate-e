@@ -1,0 +1,317 @@
+.iae-modal {
+	width: min(96vw, 1500px) !important;
+	height: min(92vh, 900px) !important;
+	max-width: 96vw !important;
+	max-height: 92vh !important;
+	padding: 0 !important;
+	display: flex !important;
+	flex-direction: column !important;
+}
+
+.iae-modal .modal-close-button {
+	z-index: 5;
+}
+
+.iae-modal .iae-modal-content,
+.iae-modal .modal-content {
+	margin: 0 !important;
+	padding: 0 !important;
+	flex: 1 1 auto !important;
+	height: 100% !important;
+	max-height: none !important;
+	display: flex !important;
+	flex-direction: column !important;
+	background: #2b2b2b !important;
+	overflow: hidden !important;
+}
+
+.iae-shell {
+	display: flex;
+	flex-direction: column;
+	flex: 1 1 auto;
+	height: 100%;
+	min-height: 0;
+}
+
+.iae-toolbar {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	flex-wrap: wrap;
+	flex: 0 0 auto;
+	padding: 8px 10px;
+	margin: 12px auto 0;
+	background: #ffffff;
+	border-radius: 14px;
+	box-shadow: 0 4px 20px rgba(0, 0, 0, 0.28);
+	width: fit-content;
+	max-width: calc(100% - 24px);
+	z-index: 2;
+}
+
+.iae-toolbar .iae-tool {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 5px;
+	min-width: 48px;
+	height: auto;
+	min-height: 54px;
+	padding: 6px 5px;
+	border: none;
+	background: transparent;
+	box-shadow: none;
+	border-radius: 10px;
+	cursor: pointer;
+	color: #333;
+	font-size: 11px;
+	line-height: 1;
+	white-space: nowrap;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+
+.iae-toolbar .iae-tool:hover {
+	background: #f2f2f2;
+	box-shadow: none;
+}
+
+.iae-toolbar .iae-tool.is-active {
+	background: #e8f0fe;
+	color: #1a73e8;
+}
+
+.iae-toolbar .iae-tool svg {
+	width: 24px;
+	height: 24px;
+	min-width: 24px;
+	min-height: 24px;
+	flex-shrink: 0;
+	display: block;
+}
+
+.iae-tool-label {
+	font-size: 11px;
+	color: inherit;
+	user-select: none;
+}
+
+.iae-sep {
+	width: 1px;
+	height: 36px;
+	background: #e0e0e0;
+	margin: 0 4px;
+}
+
+.iae-color-swatch {
+	width: 22px;
+	height: 22px;
+	border-radius: 50%;
+	border: 2px solid #ddd;
+	padding: 0;
+	cursor: pointer;
+	appearance: none;
+	-webkit-appearance: none;
+	background: none;
+}
+
+.iae-toolbar input.iae-color-code {
+	width: 64px;
+	height: 18px;
+	padding: 0 2px;
+	border: 1px solid #ddd;
+	border-radius: 4px;
+	background: #fff;
+	color: #333;
+	box-shadow: none;
+	font-family: ui-monospace, Consolas, monospace;
+	font-size: 10px;
+	text-align: center;
+}
+
+.iae-toolbar input.iae-color-code:focus {
+	border-color: #1a73e8;
+	outline: none;
+}
+
+.iae-toolbar input.iae-color-code.is-invalid {
+	border-color: #d32f2f;
+	background: #fdecea;
+}
+
+.iae-color-swatch::-webkit-color-swatch-wrapper {
+	padding: 0;
+}
+
+.iae-color-swatch::-webkit-color-swatch {
+	border: none;
+	border-radius: 50%;
+}
+
+.iae-thickness {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 4px;
+	min-width: 52px;
+	padding: 6px 8px;
+	color: #333;
+	font-size: 11px;
+}
+
+.iae-thickness input[type="range"] {
+	width: 56px;
+	accent-color: #555;
+}
+
+.iae-actions {
+	display: flex;
+	gap: 6px;
+	align-items: center;
+	margin-left: 4px;
+}
+
+.iae-toolbar .iae-action-btn {
+	height: auto;
+	box-shadow: none;
+	border: none;
+	background: #f5f5f5;
+	color: #222;
+	border-radius: 8px;
+	padding: 8px 10px;
+	font-size: 12px;
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.iae-toolbar .iae-action-btn:hover {
+	background: #eaeaea;
+	box-shadow: none;
+}
+
+.iae-toolbar .iae-action-btn.primary {
+	background: #1a73e8;
+	color: #fff;
+}
+
+.iae-toolbar .iae-action-btn.primary:hover {
+	background: #1558b0;
+}
+
+.iae-toolbar .iae-palette {
+	flex-direction: row;
+	flex-wrap: wrap;
+	max-width: 72px;
+	gap: 3px;
+	padding-top: 2px;
+}
+
+.iae-toolbar .iae-palette button,
+.iae-toolbar .iae-palette-swatch {
+	box-shadow: none;
+	min-width: 0;
+	width: 12px;
+	height: 12px;
+	border-radius: 50%;
+	border: 1px solid #ccc;
+	padding: 0;
+	cursor: pointer;
+}
+
+.iae-stage-wrap {
+	flex: 1 1 auto;
+	min-height: 280px;
+	overflow: auto;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	position: relative;
+}
+
+.iae-stage {
+	position: relative;
+	box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45);
+	line-height: 0;
+	/* checkerboard so a failed/transparent load is obvious */
+	background-color: #ccc;
+	background-image:
+		linear-gradient(45deg, #bbb 25%, transparent 25%),
+		linear-gradient(-45deg, #bbb 25%, transparent 25%),
+		linear-gradient(45deg, transparent 75%, #bbb 75%),
+		linear-gradient(-45deg, transparent 75%, #bbb 75%);
+	background-size: 20px 20px;
+	background-position: 0 0, 0 10px, 10px -10px, -10px 0;
+}
+
+.iae-stage canvas {
+	display: block;
+	max-width: 100%;
+	height: auto;
+	cursor: crosshair;
+	touch-action: none;
+	background: transparent;
+}
+
+.iae-stage.is-text canvas {
+	cursor: text;
+}
+
+/* Overrides Obsidian's input[type="text"] look: only the caret shows while typing. */
+.iae-stage input.iae-text-input {
+	position: absolute;
+	min-width: 4px;
+	height: auto;
+	margin: 0;
+	padding: 0;
+	border: none;
+	border-radius: 0;
+	background: transparent;
+	box-shadow: none;
+	outline: none;
+	font-family: sans-serif;
+	font-weight: 700;
+	line-height: 1;
+	z-index: 5;
+}
+
+.iae-border-row {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+}
+
+.iae-border-row input[type="checkbox"] {
+	margin: 0;
+	cursor: pointer;
+}
+
+.iae-toolbar .iae-border-swatch {
+	width: 18px;
+	height: 18px;
+}
+
+.iae-toolbar .iae-border-swatch:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+.iae-crop-overlay {
+	position: absolute;
+	border: 2px dashed #fff;
+	background: rgba(26, 115, 232, 0.15);
+	pointer-events: none;
+	z-index: 3;
+}
+
+.iae-hint {
+	position: absolute;
+	left: 16px;
+	bottom: 12px;
+	color: rgba(255, 255, 255, 0.85);
+	font-size: 12px;
+	pointer-events: none;
+	z-index: 2;
+	text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
+}
