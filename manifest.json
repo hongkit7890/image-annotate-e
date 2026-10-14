@@ -1,7 +1,7 @@
 {
 	"id": "image-annotate-e",
-	"name": "ImageAnnotatE",
-	"version": "1.1.5",
+	"name": "Image AnnotatE",
+	"version": "1.1.6",
 	"minAppVersion": "1.5.0",
 	"description": "Annotate images with arrows, text, shapes, highlights, badges, blur, and crop.",
 	"author": "C Wong",

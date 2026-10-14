@@ -1,4 +1,4 @@
-# ImageAnnotatE
+# Image AnnotatE
 
 Annotate images inside Obsidian with an Evernote-style floating toolbar: pen, text, highlight, shapes, arrows, badges, blur, crop, rotate, and select/move/copy.
 
@@ -18,7 +18,7 @@ Annotate images inside Obsidian with an Evernote-style floating toolbar: pen, te
 1. Download `main.js`, `manifest.json`, and `styles.css` from the [latest release](../../releases/latest).
 2. Create a folder under your vault: `.obsidian/plugins/image-annotate-e/`
 3. Copy the three files into that folder.
-4. Enable **ImageAnnotatE** in Obsidian Settings → Community plugins.
+4. Enable **Image AnnotatE** in Obsidian Settings → Community plugins.
 
 Once published in the [Obsidian Community directory](https://community.obsidian.md), you can install it from Settings → Community plugins → Browse.
 

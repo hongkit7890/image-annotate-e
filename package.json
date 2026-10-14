@@ -1,6 +1,6 @@
 {
 	"name": "image-annotate-e",
-	"version": "1.1.5",
+	"version": "1.1.6",
 	"description": "Obsidian image annotation plugin with Evernote-style tools",
 	"main": "main.js",
 	"scripts": {
